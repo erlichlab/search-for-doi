@@ -30,8 +30,8 @@ async function startup({ id, rootURI: uri }) {
     Zotero.logError(e);
   }
 
-  // onMainWindowLoad is not reliably fired for windows that were already open
-  // when the plugin was installed, so add the menu item to those explicitly.
+  // Windows already open when startup runs get the UI here. addUI is
+  // idempotent, so it is harmless if onMainWindowLoad also fires for them.
   await Zotero.uiReadyPromise;
   for (const win of Zotero.getMainWindows()) addUI(win);
   Zotero.debug("[search-for-doi] started");

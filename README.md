@@ -29,6 +29,6 @@ Requires Zotero 10.x (`strict_max_version` is `10.*`).
 
 ## Develop
 
-- Tests: `node --test test/*.test.js`
-- Edit `lib/crossref.js`, not `content/crossref.js`; `build.sh` copies it over.
+- Tests: `node --test test/*.test.js` (Node 20+, no packages to install).
+- Edit `lib/*.js`; `build.sh` copies them into `content/` (those copies are git-ignored).
 - Bump the patch version in `manifest.json` with each fix.
