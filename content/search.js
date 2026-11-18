@@ -5,10 +5,9 @@
 (() => {
 const { Zotero } = ChromeUtils.importESModule("chrome://zotero/content/zotero.mjs");
 const { mainWindow } = window.arguments?.[0] ?? {};
-const { search: searchCrossref } = globalThis.SearchForDOICrossref;
+const { search: searchCrossref, MAILTO_PREF } = globalThis.SearchForDOICrossref;
 const Library = globalThis.SearchForDOILibrary;
 
-const MAILTO_PREF = "extensions.search-for-doi.mailto";
 const $ = (id) => document.getElementById(id);
 const setStatus = (t) => { $("status").textContent = t; };
 

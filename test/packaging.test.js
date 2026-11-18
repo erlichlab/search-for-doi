@@ -41,3 +41,16 @@ test("the build copies every lib file into content/ unchanged", (t) => {
     assert.equal(read("content", f), read("lib", f), `content/${f} differs from lib/${f}`);
   }
 });
+
+test("the plugin id lives only in manifest.json; bootstrap uses the id Zotero passes in", () => {
+  assert.ok(!read("bootstrap.js").includes(manifest.applications.zotero.id));
+});
+
+test("the mailto pref key has one definition shared by the dialog and the settings pane", () => {
+  const { MAILTO_PREF } = require("../lib/crossref.js");
+  assert.match(MAILTO_PREF, /^extensions\.search-for-doi\./);
+  // The settings pane runs in a sandbox that cannot load lib/, so it keeps its
+  // own literal; this test keeps that literal equal to the shared one.
+  assert.ok(read("content", "prefs.js").includes(`"${MAILTO_PREF}"`));
+  assert.ok(!read("content", "search.js").includes(MAILTO_PREF), "dialog must use the shared constant");
+});

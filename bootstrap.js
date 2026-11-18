@@ -7,7 +7,7 @@ const BUTTON_ID = "search-for-doi-button";
 function install() {}
 function uninstall() {}
 
-async function startup({ rootURI: uri }) {
+async function startup({ id, rootURI: uri }) {
   rootURI = uri;
   const aomStartup = Components.classes[
     "@mozilla.org/addons/addon-manager-startup;1"
@@ -19,7 +19,7 @@ async function startup({ rootURI: uri }) {
 
   try {
     await Zotero.PreferencePanes.register({
-      pluginID: "search-for-doi@jerlich.local",
+      pluginID: id,
       id: "search-for-doi-prefpane",
       label: "Search for DOI",
       image: rootURI + "content/icon.svg",
