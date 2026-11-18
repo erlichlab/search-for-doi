@@ -4,12 +4,12 @@
   <meta charset="utf-8"/>
   <title>Search by Title (Crossref)</title>
   <style>
-    :root { color-scheme: light dark; font: menu; }
-    body { margin: 0; padding: 12px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; gap: 8px; }
+    :root { color-scheme: light dark; font: menu; background: Canvas; color: CanvasText; }
+    body { margin: 0; background: Canvas; color: CanvasText; padding: 12px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; gap: 8px; }
     form { display: flex; gap: 6px; }
-    #q { flex: 1; padding: 4px 6px; }
+    #q { flex: 1; padding: 4px 6px; background: Field; color: FieldText; }
     #status { min-height: 1.3em; opacity: .8; }
-    #results { flex: 1; overflow: auto; list-style: none; margin: 0; padding: 0; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+    #results { flex: 1; background: Field; color: FieldText; overflow: auto; list-style: none; margin: 0; padding: 0; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
     li { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
     .text { flex: 1; min-width: 0; }
     .title { font-weight: 600; }
