@@ -1,8 +1,11 @@
 /* eslint-disable no-undef */
 "use strict";
+// Wrapped in a function: top-level names like `search` collide with existing
+// non-configurable window properties in Gecko.
+(() => {
 const { Zotero } = ChromeUtils.importESModule("chrome://zotero/content/zotero.mjs");
 const { mainWindow } = window.arguments?.[0] ?? {};
-const { search } = globalThis.SearchForDOICrossref;
+const { search: searchCrossref } = globalThis.SearchForDOICrossref;
 
 const $ = (id) => document.getElementById(id);
 const setStatus = (t) => { $("status").textContent = t; };
@@ -58,6 +61,7 @@ async function importDoi(r, btn) {
   }
 }
 
+$("form").setAttribute("onsubmit", "return false");
 $("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const q = $("q").value;
@@ -67,7 +71,7 @@ $("form").addEventListener("submit", async (ev) => {
   $("go").disabled = true;
   setStatus("Searching Crossref…");
   try {
-    const results = await search(q, (...a) => window.fetch(...a));
+    const results = await searchCrossref(q, (...a) => window.fetch(...a));
     results.forEach((r) => list.append(renderResult(r)));
     setStatus(results.length ? `${results.length} results` : "No results");
   } catch (e) {
@@ -76,3 +80,4 @@ $("form").addEventListener("submit", async (ev) => {
     $("go").disabled = false;
   }
 });
+})();

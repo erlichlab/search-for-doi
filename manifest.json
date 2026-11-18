@@ -1,12 +1,13 @@
 {
   "manifest_version": 2,
   "name": "Search for DOI",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Search Crossref by title and import a result into Zotero by DOI.",
   "author": "jerlich",
   "applications": {
     "zotero": {
       "id": "search-for-doi@jerlich.local",
+      "update_url": "https://search-for-doi.invalid/update.json",
       "strict_min_version": "10.0",
       "strict_max_version": "10.*"
     }

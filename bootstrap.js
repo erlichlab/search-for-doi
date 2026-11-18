@@ -2,6 +2,7 @@
 var chromeHandle;
 var rootURI;
 const MENU_ID = "search-for-doi-menuitem";
+const BUTTON_ID = "search-for-doi-button";
 
 function install() {}
 function uninstall() {}
@@ -15,41 +16,72 @@ async function startup({ rootURI: uri }) {
     Services.io.newURI(rootURI + "manifest.json"),
     [["content", "search-for-doi", rootURI + "content/"]],
   );
+
+  // onMainWindowLoad is not reliably fired for windows that were already open
+  // when the plugin was installed, so add the menu item to those explicitly.
+  await Zotero.uiReadyPromise;
+  for (const win of Zotero.getMainWindows()) addUI(win);
+  Zotero.debug("[search-for-doi] started");
 }
 
-function addMenuItem(window) {
+function openSearch(window) {
+  // Pass the main window so the dialog can reach the selected collection.
+  window.openDialog(
+    "chrome://search-for-doi/content/search.xhtml",
+    "search-for-doi",
+    "chrome,dialog=no,resizable,centerscreen,width=720,height=520",
+    { mainWindow: window, rootURI },
+  );
+}
+
+function addUI(window) {
   const doc = window.document;
+
+  // Tools menu item
   const popup = doc.getElementById("menu_ToolsPopup");
-  if (!popup || doc.getElementById(MENU_ID)) return;
-  const item = doc.createXULElement("menuitem");
-  item.id = MENU_ID;
-  item.setAttribute("label", "Search by Title (Crossref)…");
-  item.addEventListener("command", () => {
-    // Pass the main window so the dialog can read the selected collection.
-    window.openDialog(
-      "chrome://search-for-doi/content/search.xhtml",
-      "search-for-doi",
-      "chrome,dialog=no,resizable,centerscreen,width=720,height=520",
-      { mainWindow: window, rootURI },
-    );
-  });
-  popup.appendChild(item);
+  if (!popup) {
+    Zotero.debug("[search-for-doi] menu_ToolsPopup not found");
+  } else if (!doc.getElementById(MENU_ID)) {
+    const item = doc.createXULElement("menuitem");
+    item.id = MENU_ID;
+    item.setAttribute("label", "Search by Title (Crossref)…");
+    item.addEventListener("command", () => openSearch(window));
+    popup.appendChild(item);
+  }
+
+  // Items-pane toolbar button, placed after the "Add Item by Identifier" wand.
+  const toolbar = doc.getElementById("zotero-items-toolbar");
+  if (!toolbar) {
+    Zotero.debug("[search-for-doi] zotero-items-toolbar not found");
+  } else if (!doc.getElementById(BUTTON_ID)) {
+    const btn = doc.createXULElement("toolbarbutton");
+    btn.id = BUTTON_ID;
+    btn.className = "zotero-tb-button";
+    btn.setAttribute("tooltiptext", "Search by Title (Crossref)");
+    btn.setAttribute("image", "chrome://search-for-doi/content/icon.svg");
+    btn.addEventListener("command", () => openSearch(window));
+    const anchor = doc.getElementById("zotero-tb-lookup");
+    if (anchor?.parentNode) anchor.after(btn);
+    else toolbar.appendChild(btn);
+  }
 }
 
-function removeMenuItem(window) {
-  window.document.getElementById(MENU_ID)?.remove();
+function removeUI(window) {
+  const doc = window.document;
+  doc.getElementById(MENU_ID)?.remove();
+  doc.getElementById(BUTTON_ID)?.remove();
 }
 
 function onMainWindowLoad({ window }) {
-  addMenuItem(window);
+  addUI(window);
 }
 function onMainWindowUnload({ window }) {
-  removeMenuItem(window);
+  removeUI(window);
 }
 
 function shutdown(_data, reason) {
   if (reason === APP_SHUTDOWN) return;
-  for (const win of Zotero.getMainWindows()) removeMenuItem(win);
+  for (const win of Zotero.getMainWindows()) removeUI(win);
   chromeHandle?.destruct();
   chromeHandle = null;
 }
