@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Search by Title (Crossref)</title>
+  <style>
+    :root { color-scheme: light dark; font: menu; }
+    body { margin: 0; padding: 12px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; gap: 8px; }
+    form { display: flex; gap: 6px; }
+    #q { flex: 1; padding: 4px 6px; }
+    #status { min-height: 1.3em; opacity: .8; }
+    #results { flex: 1; overflow: auto; list-style: none; margin: 0; padding: 0; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+    li { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+    .text { flex: 1; min-width: 0; }
+    .title { font-weight: 600; }
+    .meta, .doi { opacity: .75; font-size: .9em; }
+    button { padding: 3px 12px; }
+  </style>
+</head>
+<body>
+  <form id="form">
+    <input id="q" type="text" placeholder="Paper title…" autofocus="autofocus"/>
+    <button type="submit" id="go">Search</button>
+  </form>
+  <div id="status"></div>
+  <ul id="results"></ul>
+  <script src="chrome://search-for-doi/content/crossref.js"></script>
+  <script src="chrome://search-for-doi/content/search.js"></script>
+</body>
+</html>
