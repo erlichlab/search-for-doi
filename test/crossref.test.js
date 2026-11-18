@@ -38,3 +38,14 @@ test("search: empty query makes no request; HTTP errors throw", async () => {
   assert.equal(calls, 0);
   await assert.rejects(() => c.search("x", f), /HTTP 503/);
 });
+
+test("doiKey matches the same DOI across case and resolver prefixes", () => {
+  const k = c.doiKey("10.1038/NATURE14539");
+  assert.equal(k, "10.1038/nature14539");
+  assert.equal(c.doiKey("https://doi.org/10.1038/nature14539"), k);
+  assert.equal(c.doiKey("http://dx.doi.org/10.1038/Nature14539"), k);
+  assert.equal(c.doiKey("doi: 10.1038/nature14539."), k);
+  assert.equal(c.doiKey("not a doi"), "");
+  assert.equal(c.doiKey(null), "");
+  assert.notEqual(c.doiKey("10.1038/nature1453"), k); // no prefix matching
+});

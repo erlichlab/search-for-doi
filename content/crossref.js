@@ -25,6 +25,16 @@ function normalizeDoi(doi) {
   return m ? m[0] : "";
 }
 
+// Canonical form for comparing DOIs: DOIs are case-insensitive and are often
+// stored with a resolver prefix (https://doi.org/...) or a "doi:" scheme.
+function doiKey(doi) {
+  return normalizeDoi(
+    String(doi ?? "").trim().replace(/^(https?:\/\/(dx\.)?doi\.org\/|doi:\s*)/i, ""),
+  )
+    .replace(/[.,;)\]]+$/, "")
+    .toLowerCase();
+}
+
 function parseResults(json) {
   const items = json?.message?.items;
   if (!Array.isArray(items)) return [];
@@ -59,7 +69,7 @@ async function search(title, fetchImpl = fetch, rows = 10) {
   return parseResults(await res.json());
 }
 
-const exported = { buildUrl, parseResults, normalizeDoi, stripMarkup, search };
+const exported = { buildUrl, parseResults, normalizeDoi, doiKey, stripMarkup, search };
 if (typeof module !== "undefined") module.exports = exported;
 else root.SearchForDOICrossref = exported;
 })(globalThis);
