@@ -5,7 +5,8 @@
 (() => {
 const { Zotero } = ChromeUtils.importESModule("chrome://zotero/content/zotero.mjs");
 const { mainWindow } = window.arguments?.[0] ?? {};
-const { search: searchCrossref, doiKey } = globalThis.SearchForDOICrossref;
+const { search: searchCrossref } = globalThis.SearchForDOICrossref;
+const Library = globalThis.SearchForDOILibrary;
 
 const MAILTO_PREF = "extensions.search-for-doi.mailto";
 const $ = (id) => document.getElementById(id);
@@ -38,20 +39,6 @@ function renderResult(r) {
   return row;
 }
 
-// Find an existing, non-trashed item in `libraryID` with exactly this DOI.
-// Zotero's "contains" is a case-insensitive substring match, so confirm each
-// candidate's DOI field exactly (after normalizing) before calling it a match.
-async function findInLibrary(libraryID, doi) {
-  const key = doiKey(doi);
-  const s = new Zotero.Search();
-  s.libraryID = libraryID;
-  s.addCondition("DOI", "contains", key);
-  const ids = await s.search();
-  if (!ids.length) return null;
-  const items = await Zotero.Items.getAsync(ids);
-  return items.find((it) => doiKey(it.getField("DOI")) === key) ?? null;
-}
-
 function markInLibrary(row, item) {
   row.item = item;
   row.badge.hidden = false;
@@ -65,27 +52,25 @@ function markInLibrary(row, item) {
   row.btn.textContent = "Import again";
 }
 
+// Marks rows already in the library. Returns the counts so the status line can
+// say how many lookups failed instead of implying they found nothing.
 async function checkLibrary(rows) {
-  let libraryID;
+  let results;
   try {
-    libraryID = Zotero.getActiveZoteroPane().getSelectedLibraryID();
+    const libraryID = Zotero.getActiveZoteroPane().getSelectedLibraryID();
+    results = await Library.checkLibrary(Zotero, libraryID, rows.map((row) => row.r.doi));
   } catch (e) {
     Zotero.logError(e);
-    return 0;
+    return { found: 0, failed: rows.length };
   }
-  const found = await Promise.all(
-    rows.map(async (row) => {
-      try {
-        const item = await findInLibrary(libraryID, row.r.doi);
-        if (item) markInLibrary(row, item);
-        return !!item;
-      } catch (e) {
-        Zotero.logError(e); // a failed check must never block importing
-        return false;
-      }
-    }),
-  );
-  return found.filter(Boolean).length;
+  results.forEach((res, i) => {
+    if (res.error) Zotero.logError(res.error);
+    else if (res.item) markInLibrary(rows[i], res.item);
+  });
+  return {
+    found: results.filter((res) => res.item).length,
+    failed: results.filter((res) => res.error).length,
+  };
 }
 
 async function importDoi(row) {
@@ -94,21 +79,12 @@ async function importDoi(row) {
   btn.textContent = "Importing…";
   try {
     const pane = Zotero.getActiveZoteroPane();
-    const libraryID = pane.getSelectedLibraryID();
     const collection = pane.getSelectedCollection();
-    // Same engine as the "Add Item by Identifier" wand.
-    const translate = new Zotero.Translate.Search();
-    translate.setIdentifier({ DOI: r.doi });
-    const translators = await translate.getTranslators();
-    if (!translators.length) throw new Error("No translator found for this DOI");
-    translate.setTranslator(translators);
-    const items = await translate.translate({
-      libraryID,
-      collections: collection ? [collection.id] : false,
-      saveAttachments: false,
+    const item = await Library.importByDoi(Zotero, r.doi, {
+      libraryID: pane.getSelectedLibraryID(),
+      collection,
     });
-    if (!items?.length) throw new Error("Zotero returned no item");
-    markInLibrary(row, items[0]);
+    markInLibrary(row, item);
     btn.textContent = "Imported ✓";
     setStatus(`Imported: ${r.doi}${collection ? ` → ${collection.name}` : ""}`);
   } catch (e) {
@@ -139,8 +115,8 @@ $("form").addEventListener("submit", async (ev) => {
     rows.forEach((row) => list.append(row.li));
     setStatus(results.length ? `${results.length} results — checking your library…` : "No results");
     if (results.length) {
-      const n = await checkLibrary(rows);
-      setStatus(`${results.length} results, ${n} already in your library`);
+      const { found, failed } = await checkLibrary(rows);
+      setStatus(Library.summarize(results.length, found, failed));
     }
   } catch (e) {
     setStatus(`Search failed: ${e.message || e}`);
