@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Search for DOI",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Search Crossref by title and import a result into Zotero by DOI.",
   "author": "jerlich",
   "applications": {

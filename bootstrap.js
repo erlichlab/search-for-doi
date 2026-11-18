@@ -17,6 +17,19 @@ async function startup({ rootURI: uri }) {
     [["content", "search-for-doi", rootURI + "content/"]],
   );
 
+  try {
+    await Zotero.PreferencePanes.register({
+      pluginID: "search-for-doi@jerlich.local",
+      id: "search-for-doi-prefpane",
+      label: "Search for DOI",
+      image: rootURI + "content/icon.svg",
+      src: rootURI + "content/prefs.xhtml",
+      scripts: [rootURI + "content/prefs.js"],
+    });
+  } catch (e) {
+    Zotero.logError(e);
+  }
+
   // onMainWindowLoad is not reliably fired for windows that were already open
   // when the plugin was installed, so add the menu item to those explicitly.
   await Zotero.uiReadyPromise;

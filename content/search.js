@@ -7,6 +7,7 @@ const { Zotero } = ChromeUtils.importESModule("chrome://zotero/content/zotero.mj
 const { mainWindow } = window.arguments?.[0] ?? {};
 const { search: searchCrossref, doiKey } = globalThis.SearchForDOICrossref;
 
+const MAILTO_PREF = "extensions.search-for-doi.mailto";
 const $ = (id) => document.getElementById(id);
 const setStatus = (t) => { $("status").textContent = t; };
 
@@ -128,7 +129,12 @@ $("form").addEventListener("submit", async (ev) => {
   $("go").disabled = true;
   setStatus("Searching Crossref…");
   try {
-    const results = await searchCrossref(q, (...a) => window.fetch(...a));
+    const results = await searchCrossref(
+      q,
+      (...a) => window.fetch(...a),
+      10,
+      Zotero.Prefs.get(MAILTO_PREF, true) || "",
+    );
     const rows = results.map(renderResult);
     rows.forEach((row) => list.append(row.li));
     setStatus(results.length ? `${results.length} results — checking your library…` : "No results");

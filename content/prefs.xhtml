@@ -1,0 +1,20 @@
+<!--
+  Preference pane fragment for Zotero's settings window. Must not start with an
+  <?xml?> declaration (Zotero wraps it in its own document).
+-->
+<vbox id="search-for-doi-prefpane" class="main-section">
+  <groupbox>
+    <caption label="Search for DOI" />
+    <description class="pane-desc">
+      Optional contact email sent to Crossref with each title search. Crossref
+      uses it to route you to its faster "polite" pool and to contact you if
+      your usage causes problems. Leave blank to send no email.
+    </description>
+    <hbox align="center">
+      <label value="Contact email:" control="search-for-doi-mailto" />
+      <html:input id="search-for-doi-mailto" type="email" size="32"
+                  placeholder="you@example.org" />
+    </hbox>
+    <description id="search-for-doi-mailto-status" class="pane-desc" />
+  </groupbox>
+</vbox>

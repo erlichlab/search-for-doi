@@ -49,3 +49,19 @@ test("doiKey matches the same DOI across case and resolver prefixes", () => {
   assert.equal(c.doiKey(null), "");
   assert.notEqual(c.doiKey("10.1038/nature1453"), k); // no prefix matching
 });
+
+test("mailto is added only when it looks like an email", () => {
+  const has = (m) => new URL(c.buildUrl("t", 10, m)).searchParams.get("mailto");
+  assert.equal(has("me@example.org"), "me@example.org");
+  assert.equal(has("  me@example.org "), "me@example.org");
+  assert.equal(has(""), null);
+  assert.equal(has("not an email"), null);
+  assert.equal(has(undefined), null);
+});
+
+test("search passes mailto through to the request URL", async () => {
+  let url;
+  const f = async (u) => { url = u; return { ok: true, json: async () => ({ message: { items: [] } }) }; };
+  await c.search("x", f, 10, "me@example.org");
+  assert.match(url, /mailto=me%40example\.org/);
+});
