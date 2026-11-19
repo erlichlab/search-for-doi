@@ -7,7 +7,7 @@ const BUTTON_ID = "search-for-doi-button";
 function install() {}
 function uninstall() {}
 
-async function startup({ rootURI: uri }) {
+async function startup({ id, rootURI: uri }) {
   rootURI = uri;
   const aomStartup = Components.classes[
     "@mozilla.org/addons/addon-manager-startup;1"
@@ -19,7 +19,7 @@ async function startup({ rootURI: uri }) {
 
   try {
     await Zotero.PreferencePanes.register({
-      pluginID: "search-for-doi@jerlich.local",
+      pluginID: id,
       id: "search-for-doi-prefpane",
       label: "Search for DOI",
       image: rootURI + "content/icon.svg",
@@ -30,16 +30,24 @@ async function startup({ rootURI: uri }) {
     Zotero.logError(e);
   }
 
-  // onMainWindowLoad is not reliably fired for windows that were already open
-  // when the plugin was installed, so add the menu item to those explicitly.
+  // Windows already open when startup runs get the UI here. addUI is
+  // idempotent, so it is harmless if onMainWindowLoad also fires for them.
   await Zotero.uiReadyPromise;
   for (const win of Zotero.getMainWindows()) addUI(win);
   Zotero.debug("[search-for-doi] started");
 }
 
+var searchWin = null;
+
 function openSearch(window) {
+  // A second click raises the open dialog instead of spawning another one that
+  // could also land behind the main window.
+  if (searchWin && !searchWin.closed) {
+    searchWin.focus();
+    return;
+  }
   // Pass the main window so the dialog can reach the selected collection.
-  window.openDialog(
+  searchWin = window.openDialog(
     "chrome://search-for-doi/content/search.xhtml",
     "search-for-doi",
     "chrome,dialog=no,resizable,centerscreen,width=720,height=520",
@@ -95,6 +103,8 @@ function onMainWindowUnload({ window }) {
 function shutdown(_data, reason) {
   if (reason === APP_SHUTDOWN) return;
   for (const win of Zotero.getMainWindows()) removeUI(win);
+  if (searchWin && !searchWin.closed) searchWin.close();
+  searchWin = null;
   chromeHandle?.destruct();
   chromeHandle = null;
 }
