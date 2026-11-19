@@ -32,3 +32,4 @@ Requires Zotero 10.x (`strict_max_version` is `10.*`).
 - Tests: `node --test test/*.test.js`
 - Edit `lib/crossref.js`, not `content/crossref.js`; `build.sh` copies it over.
 - Bump the patch version in `manifest.json` with each fix.
+- Releases are automatic: when a push to `main` carries a `manifest.json` version that has no GitHub release yet, CI (`.github/workflows/release.yml`) runs the tests, builds the `.xpi`, and publishes release `v<version>` with the `.xpi` attached. Pushes that don't bump the version do nothing.
