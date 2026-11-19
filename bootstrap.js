@@ -37,9 +37,17 @@ async function startup({ id, rootURI: uri }) {
   Zotero.debug("[search-for-doi] started");
 }
 
+var searchWin = null;
+
 function openSearch(window) {
+  // A second click raises the open dialog instead of spawning another one that
+  // could also land behind the main window.
+  if (searchWin && !searchWin.closed) {
+    searchWin.focus();
+    return;
+  }
   // Pass the main window so the dialog can reach the selected collection.
-  window.openDialog(
+  searchWin = window.openDialog(
     "chrome://search-for-doi/content/search.xhtml",
     "search-for-doi",
     "chrome,dialog=no,resizable,centerscreen,width=720,height=520",
@@ -95,6 +103,8 @@ function onMainWindowUnload({ window }) {
 function shutdown(_data, reason) {
   if (reason === APP_SHUTDOWN) return;
   for (const win of Zotero.getMainWindows()) removeUI(win);
+  if (searchWin && !searchWin.closed) searchWin.close();
+  searchWin = null;
   chromeHandle?.destruct();
   chromeHandle = null;
 }

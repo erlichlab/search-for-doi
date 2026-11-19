@@ -94,6 +94,11 @@ async function importDoi(row) {
   }
 }
 
+// A non-modal window opened from the main window is not raised automatically
+// (on macOS it can stay behind it), so take focus and put the cursor in the box.
+window.focus();
+$("q").focus();
+
 $("form").setAttribute("onsubmit", "return false");
 $("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
